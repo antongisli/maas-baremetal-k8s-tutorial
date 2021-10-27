@@ -41,8 +41,9 @@ maas admin vm-hosts read | jq '.[] | select (.name=="proud-possum") | .name, .id
 maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=8192 architecture="amd64/generic" \
  storage="main:100(pool1)"
 
- # Juju
+ # Juju (note, this section requires manual intervention)
 sudo snap install juju --classic
+sed -i 's/IP_ADDRESS/${IP_ADDRESS}/' maas-cloud.yaml
 juju add-cloud --local maas-cloud maas-cloud.yaml
 juju add-credential maas-cloud
 juju clouds --local
