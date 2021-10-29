@@ -1,0 +1,2 @@
+ceph-osd:
+  osd-devices: /dev/sda

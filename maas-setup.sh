@@ -1,3 +1,7 @@
+# lxd / maas issue. either upgrade lxd or maas to 3.1
+sudo snap switch --channel=4.19/stable lxd
+sudo snap refresh lxd
+
 #get local interface name (this assumes a single default route is present)
 export INTERFACE=$(ip route | grep default | cut -d ' ' -f 5)
 export IP_ADDRESS=$(ip -4 addr show dev $INTERFACE | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
@@ -38,8 +42,7 @@ maas admin vm-hosts create  password=password  type=lxd power_address=https://${
 maas admin vm-hosts read | jq '.[] | select (.name=="proud-possum") | .name, .id'
 # add a VM
 #TODO use the variable for the VM host ID (below it is static 1)
-maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=8192 architecture="amd64/generic" \
- storage="main:100(pool1)"
+maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=8192 architecture="amd64/generic" storage="main:100(pool1)"
 
  # Juju (note, this section requires manual intervention)
 sudo snap install juju --classic
@@ -49,3 +52,51 @@ juju add-credential maas-cloud
 juju clouds --local
 juju credentials
 juju bootstrap maas-cloud
+
+
+
+# fire up the juju gui to view the fun
+juju gui
+# get coffee
+
+
+# get some storage going
+# https://jaas.ai/ceph-base
+# https://jaas.ai/canonical-kubernetes/bundle/471
+juju deploy -n 3 ceph-mon
+
+# add some machines for ceph-osd, 2 disks each
+maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=2048 architecture="amd64/generic" storage="main:8(pool1),ceph:80(pool1)"
+maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=2048 architecture="amd64/generic" storage="main:8(pool1),ceph:80(pool1)"
+maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=2048 architecture="amd64/generic" storage="main:8(pool1),ceph:80(pool1)"
+
+juju deploy --config ceph-osd.yaml cs:ceph-osd -n 3
+juju add-relation ceph-mon ceph-osd
+
+# add some machines for kubernetes-core
+maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=4096 architecture="amd64/generic" storage="main:24(pool1)"
+maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=4096 architecture="amd64/generic" storage="main:24(pool1)"
+maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=4096 architecture="amd64/generic" storage="main:24(pool1)"
+
+# deploy kubernetes-core with juju
+juju deploy kubernetes-core
+# add the new kubernetes as a cloud to juju
+mkdir ~/.kube
+juju scp kubernetes-master/0:/home/ubuntu/config ~/.kube/config
+
+# add storage relations
+juju add-relation ceph-mon:admin kubernetes-master
+juju add-relation ceph-mon:client kubernetes-master
+
+# add k8s to juju
+juju add-k8s my-k8s
+juju bootstrap my-k8s
+
+# add a model (k8s namespace) to the cluster
+juju add-model k8s-model my-k8s
+
+# add an LMA model to the cluster
+juju add-model lma my-k8s
+
+juju deploy lma-light --channel=edge --trust
+#juju destroy-controller -y --destroy-all-models --destroy-storage maas-cloud-default
