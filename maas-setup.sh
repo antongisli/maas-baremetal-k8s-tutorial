@@ -40,10 +40,11 @@ maas admin vm-hosts create  password=password  type=lxd power_address=https://${
 # creating VMs
 # TODO find out the name of our vm host, and store this id in a variable
 maas admin vm-hosts read | jq '.[] | select (.name=="proud-possum") | .name, .id'
-# add a VM
+# add a VM for the juju controller with minimal memory
 # TODO use the variable for the VM host ID (below it is static 1)
-maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=8192 architecture="amd64/generic" storage="main:100(pool1)"
-maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=2048 architecture="amd64/generic" storage="main:30(pool1)"
+maas admin vm-host compose 1 cores=8 memory=2048 architecture="amd64/generic" storage="main:16(pool1)"
+#TODO get the system_id from output of above, and use it with:
+# maas admin tag update-nodes "juju-controller" add=$TAG
 
  # Juju (note, this section requires manual intervention)
 sudo snap install juju --classic
@@ -52,7 +53,8 @@ juju add-cloud --local maas-cloud maas-cloud.yaml
 juju add-credential maas-cloud
 juju clouds --local
 juju credentials
-juju bootstrap maas-cloud
+# Bootstrap the maas-cloud - get a coffee
+juju bootstrap maas-cloud --bootstrap-constraints "tags=juju-controller mem=2G"
 
 
 
@@ -66,17 +68,21 @@ juju gui
 # https://jaas.ai/canonical-kubernetes/bundle/471
 
 # TODO do we need to create ceph-mon machines?
-maas admin vm-host compose 1 cores=8 memory=8192 architecture="amd64/generic" storage="main:8(pool1),ceph:150(pool1)" hostname="metal-1"
-maas admin vm-host compose 1 cores=8 memory=8192 architecture="amd64/generic" storage="main:8(pool1),ceph:150(pool1)" hostname="metal-2"
-maas admin vm-host compose 1 cores=8 memory=8192 architecture="amd64/generic" storage="main:8(pool1),ceph:150(pool1)" hostname="metal-3"
+maas admin vm-host compose 1 cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-1"
+# TODO grab system-id and tag machine "metal"
+maas admin vm-host compose 1 cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-2"
+# TODO grab system-id and tag machine "metal"
+maas admin vm-host compose 1 cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-3"
+# TODO grab system-id and tag machine "metal"
 
+
+# Deploy Ceph
 juju deploy -n 3 ceph-mon --to lxd:0,lxd:1,lxd:2
-
-# watch the fun (with a coffee)
-watch -c juju status --color
-
 juju deploy --config ceph-osd.yaml cs:ceph-osd -n 3 --to 0,1,2
 juju add-relation ceph-mon ceph-osd
+
+# watch the fun (with a another coffee)
+watch -c juju status --color
 
 # deploy kubernetes-core with juju and re-use existing machines
 juju deploy kubernetes-core --map-machines=existing,0=0,1=1
