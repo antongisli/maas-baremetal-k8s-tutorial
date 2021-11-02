@@ -43,6 +43,7 @@ maas admin vm-hosts read | jq '.[] | select (.name=="proud-possum") | .name, .id
 # add a VM
 # TODO use the variable for the VM host ID (below it is static 1)
 maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=8192 architecture="amd64/generic" storage="main:100(pool1)"
+maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=2048 architecture="amd64/generic" storage="main:30(pool1)"
 
  # Juju (note, this section requires manual intervention)
 sudo snap install juju --classic
@@ -65,24 +66,21 @@ juju gui
 # https://jaas.ai/canonical-kubernetes/bundle/471
 
 # TODO do we need to create ceph-mon machines?
+maas admin vm-host compose 1 cores=8 memory=8192 architecture="amd64/generic" storage="main:8(pool1),ceph:150(pool1)" hostname="metal-1"
+maas admin vm-host compose 1 cores=8 memory=8192 architecture="amd64/generic" storage="main:8(pool1),ceph:150(pool1)" hostname="metal-2"
+maas admin vm-host compose 1 cores=8 memory=8192 architecture="amd64/generic" storage="main:8(pool1),ceph:150(pool1)" hostname="metal-3"
 
-juju deploy -n 3 ceph-mon
+juju deploy -n 3 ceph-mon --to lxd:0,lxd:1,lxd:2
 
-# add some machines for ceph-osd, 2 disks each
-maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=2048 architecture="amd64/generic" storage="main:8(pool1),ceph:80(pool1)"
-maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=2048 architecture="amd64/generic" storage="main:8(pool1),ceph:80(pool1)"
-maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=2048 architecture="amd64/generic" storage="main:8(pool1),ceph:80(pool1)"
+# watch the fun (with a coffee)
+watch -c juju status --color
 
-juju deploy --config ceph-osd.yaml cs:ceph-osd -n 3
+juju deploy --config ceph-osd.yaml cs:ceph-osd -n 3 --to 0,1,2
 juju add-relation ceph-mon ceph-osd
 
-# add some machines for kubernetes-core
-maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=4096 architecture="amd64/generic" storage="main:24(pool1)"
-maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=4096 architecture="amd64/generic" storage="main:24(pool1)"
-maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=4096 architecture="amd64/generic" storage="main:24(pool1)"
-
-# deploy kubernetes-core with juju
-juju deploy kubernetes-core
+# deploy kubernetes-core with juju and re-use existing machines
+juju deploy kubernetes-core --map-machines=existing,0=0,1=1
+#juju deploy kubernetes-core
 # add the new kubernetes as a cloud to juju
 mkdir ~/.kube
 juju scp kubernetes-master/0:/home/ubuntu/config ~/.kube/config
