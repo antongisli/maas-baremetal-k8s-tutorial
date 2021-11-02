@@ -37,11 +37,11 @@ maas admin maas set-config name=upstream_dns value=8.8.8.8
 # Add LXD as a VM host for MAAS
 maas admin vm-hosts create  password=password  type=lxd power_address=https://${IP_ADDRESS}:8443 project=maas
 
-#creating VMs
-#TODO find out the name of our vm host, and store this id in a variable
+# creating VMs
+# TODO find out the name of our vm host, and store this id in a variable
 maas admin vm-hosts read | jq '.[] | select (.name=="proud-possum") | .name, .id'
 # add a VM
-#TODO use the variable for the VM host ID (below it is static 1)
+# TODO use the variable for the VM host ID (below it is static 1)
 maas admin vm-host compose 1 cores=4 cpu_speed=300 memory=8192 architecture="amd64/generic" storage="main:100(pool1)"
 
  # Juju (note, this section requires manual intervention)
@@ -63,6 +63,9 @@ juju gui
 # get some storage going
 # https://jaas.ai/ceph-base
 # https://jaas.ai/canonical-kubernetes/bundle/471
+
+# TODO do we need to create ceph-mon machines?
+
 juju deploy -n 3 ceph-mon
 
 # add some machines for ceph-osd, 2 disks each
