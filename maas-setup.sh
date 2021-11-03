@@ -39,19 +39,20 @@ maas admin vm-hosts create  password=password  type=lxd power_address=https://${
 
 # creating VMs
 # TODO find out the name of our vm host, and store this id in a variable
-maas admin vm-hosts read | jq '.[] | select (.name=="proud-possum") | .name, .id'
+
+export VM_HOST_ID=maas admin vm-hosts read | jq -r --arg VM_HOST "$(hostname)" '.[] | select (.name==$VM_HOST) | .id'
 # add a VM for the juju controller with minimal memory
 # TODO use the variable for the VM host ID (below it is static 1). If you don't have 8 cores, change this to 4.
-maas admin vm-host compose 1 cores=8 memory=2048 architecture="amd64/generic" storage="main:16(pool1)"
+maas admin vm-host compose $VM_HOST_ID cores=8 memory=2048 architecture="amd64/generic" storage="main:16(pool1)"
 #TODO get the system_id from output of above, and use it with:
 # maas admin tag update-nodes "juju-controller" add=$SYSTEM-ID
 
 ## Create 3 "bare metal" machines
-maas admin vm-host compose 1 cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-1"
+maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-1"
 # TODO grab system-id and tag machine "metal"
-maas admin vm-host compose 1 cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-2"
+maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-2"
 # TODO grab system-id and tag machine "metal"
-maas admin vm-host compose 1 cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-3"
+maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-3"
 # TODO grab system-id and tag machine "metal"
 
 # Go to the MAAS UI, log in with username admin password admin, and tag the machines
