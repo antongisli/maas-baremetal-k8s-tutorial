@@ -43,21 +43,16 @@ export VM_HOST_ID=maas admin vm-hosts read | jq -r --arg VM_HOST "$(hostname)" '
 # add a VM for the juju controller with minimal memory
 maas admin vm-host compose $VM_HOST_ID cores=8 memory=2048 architecture="amd64/generic" storage="main:16(pool1)" hostname="juju-controller"
 # get the system-id and tag the machine with "juju-controller"
-export JUJU_SYSID=$(maas admin machines read | jq  '.[] | select(."hostname"=="juju-controller") | .["system_id"]')
+JUJU_SYSID=$(maas admin machines read | jq  '.[] | select(."hostname"=="juju-controller") | .["system_id"]' | tr -d '"')
 maas admin tag update-nodes "juju-controller" add=$JUJU_SYSID
 
 ## Create 3 "bare metal" machines and tag them with "metal"
-maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-1"
-export METAL1_SYSID=$(maas admin machines read | jq  '.[] | select(."hostname"=="metal-1") | .["system_id"]')
-maas admin tag update-nodes "metal" add=$METAL1_SYSID
-
-maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-2"
-export METAL1_SYSID=$(maas admin machines read | jq  '.[] | select(."hostname"=="metal-2") | .["system_id"]')
-maas admin tag update-nodes "metal" add=$METAL2_SYSID
-
-maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-3"
-export METAL1_SYSID=$(maas admin machines read | jq  '.[] | select(."hostname"=="metal-3") | .["system_id"]')
-maas admin tag update-nodes "metal" add=$METAL3_SYSID
+for ID in 1 2 3
+do
+    maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-${ID}"
+	SYSID=$(maas admin machines read | jq -r --arg MACHINE "metal-${ID}" '.[] | select(."hostname"==$MACHINE) | .["system_id"]' | tr -d '"')
+    maas admin tag update-nodes "metal" add=$SYSID
+done
 
 
 ### Juju setup (note, this section requires manual intervention)
