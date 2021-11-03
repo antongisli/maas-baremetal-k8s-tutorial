@@ -37,26 +37,28 @@ maas admin maas set-config name=upstream_dns value=8.8.8.8
 # Add LXD as a VM host for MAAS
 maas admin vm-hosts create  password=password  type=lxd power_address=https://${IP_ADDRESS}:8443 project=maas
 
-# creating VMs
-# TODO find out the name of our vm host, and store this id in a variable
+### creating VMs for Juju controller and our "bare metal"
 
 export VM_HOST_ID=maas admin vm-hosts read | jq -r --arg VM_HOST "$(hostname)" '.[] | select (.name==$VM_HOST) | .id'
 # add a VM for the juju controller with minimal memory
-# TODO use the variable for the VM host ID (below it is static 1). If you don't have 8 cores, change this to 4.
-maas admin vm-host compose $VM_HOST_ID cores=8 memory=2048 architecture="amd64/generic" storage="main:16(pool1)"
-#TODO get the system_id from output of above, and use it with:
-# maas admin tag update-nodes "juju-controller" add=$SYSTEM-ID
+maas admin vm-host compose $VM_HOST_ID cores=8 memory=2048 architecture="amd64/generic" storage="main:16(pool1)" hostname="juju-controller"
+# get the system-id and tag the machine with "juju-controller"
+export JUJU_SYSID=$(maas admin machines read | jq  '.[] | select(."hostname"=="juju-controller") | .["system_id"]')
+maas admin tag update-nodes "juju-controller" add=$JUJU_SYSID
 
-## Create 3 "bare metal" machines
+## Create 3 "bare metal" machines and tag them with "metal"
 maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-1"
-# TODO grab system-id and tag machine "metal"
-maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-2"
-# TODO grab system-id and tag machine "metal"
-maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-3"
-# TODO grab system-id and tag machine "metal"
+export METAL1_SYSID=$(maas admin machines read | jq  '.[] | select(."hostname"=="metal-1") | .["system_id"]')
+maas admin tag update-nodes "metal" add=$METAL1_SYSID
 
-# Go to the MAAS UI, log in with username admin password admin, and tag the machines
-# Browse to http://localhost:5240/MAAS/ - select the 3 machines metal-1, metal-2, and metal-3, click actions - add tag "metal"
+maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-2"
+export METAL1_SYSID=$(maas admin machines read | jq  '.[] | select(."hostname"=="metal-2") | .["system_id"]')
+maas admin tag update-nodes "metal" add=$METAL2_SYSID
+
+maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-3"
+export METAL1_SYSID=$(maas admin machines read | jq  '.[] | select(."hostname"=="metal-3") | .["system_id"]')
+maas admin tag update-nodes "metal" add=$METAL3_SYSID
+
 
 ### Juju setup (note, this section requires manual intervention)
 cd ~
