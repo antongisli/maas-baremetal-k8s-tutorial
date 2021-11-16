@@ -30,7 +30,7 @@ lxd waitready
 sudo maas init region+rack --database-uri maas-test-db:/// --maas-url http://${IP_ADDRESS}:5240/MAAS
 sleep 15
 # Create MAAS admin and grab API key
-maas createadmin --username admin --password admin --email admin
+sudo maas createadmin --username admin --password admin --email admin
 export APIKEY=$(sudo maas apikey --username admin)
 # MAAS admin login
 maas login admin 'http://localhost:5240/MAAS/' $APIKEY
