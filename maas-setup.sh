@@ -47,6 +47,9 @@ maas admin maas set-config name=upstream_dns value=8.8.8.8
 VM_HOST_ID=$(maas admin vm-hosts create  password=password  type=lxd power_address=https://${IP_ADDRESS}:8443 \
  project=maas | jq '.id')
 
+# allow high CPU oversubscription so all VMs can use all cores
+maas admin vm-host update $VM_HOST_ID cpu_over_commit_ratio=4
+
 ### creating VMs for Juju controller and our "bare metal"
 
 # add a VM for the juju controller with minimal memory
