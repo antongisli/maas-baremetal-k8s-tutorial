@@ -6,24 +6,24 @@ sudo snap install --channel=3.1/beta maas
 #get local interface name (this assumes a single default route is present)
 export INTERFACE=$(ip route | grep default | cut -d ' ' -f 5)
 export IP_ADDRESS=$(ip -4 addr show dev $INTERFACE | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
-sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-sysctl -p
-iptables -t nat -A POSTROUTING -o $INTERFACE -j SNAT --to $IP_ADDRESS
+sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+sudo sysctl -p
+sudo iptables -t nat -A POSTROUTING -o $INTERFACE -j SNAT --to $IP_ADDRESS
 #TODO inbound port forwarding/load balancing
 # Persist NAT configuration
 echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
 echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
-apt-get install iptables-persistent -y
+sudo apt-get install iptables-persistent -y
 # LXD init
-cat /tmp/lxd.cfg | lxd init --preseed
+sudo cat /tmp/lxd.cfg | lxd init --preseed
 # Wait for LXD to be ready
 lxd waitready
 # Initialise MAAS
-maas init region+rack --database-uri maas-test-db:/// --maas-url http://${IP_ADDRESS}:5240/MAAS
+sudo maas init region+rack --database-uri maas-test-db:/// --maas-url http://${IP_ADDRESS}:5240/MAAS
 sleep 15
 # Create MAAS admin and grab API key
 maas createadmin --username admin --password admin --email admin
-export APIKEY=$(maas apikey --username admin)
+export APIKEY=$(sudo maas apikey --username admin)
 # MAAS admin login
 maas login admin 'http://localhost:5240/MAAS/' $APIKEY
 # Configure MAAS networking (set gateways, vlans, DHCP on etc)
