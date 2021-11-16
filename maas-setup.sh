@@ -35,12 +35,12 @@ maas admin subnet update $SUBNET gateway_ip=10.10.10.1
 maas admin ipranges create type=dynamic start_ip=10.10.10.200 end_ip=10.10.10.254
 maas admin vlan update $FABRIC_ID $VLAN_TAG dhcp_on=True primary_rack=$PRIMARY_RACK
 maas admin maas set-config name=upstream_dns value=8.8.8.8
-# Add LXD as a VM host for MAAS
-maas admin vm-hosts create  password=password  type=lxd power_address=https://${IP_ADDRESS}:8443 project=maas
+# Add LXD as a VM host for MAAS and capture the VM_HOST_ID
+VM_HOST_ID=maas admin vm-hosts create  password=password  type=lxd power_address=https://${IP_ADDRESS}:8443 \
+ project=maas | jq '.id'
 
 ### creating VMs for Juju controller and our "bare metal"
 
-export VM_HOST_ID=maas admin vm-hosts read | jq -r --arg VM_HOST "$(hostname)" '.[] | select (.name==$VM_HOST) | .id'
 # add a VM for the juju controller with minimal memory
 maas admin vm-host compose $VM_HOST_ID cores=8 memory=2048 architecture="amd64/generic" storage="main:16(pool1)" hostname="juju-controller"
 # get the system-id and tag the machine with "juju-controller"
