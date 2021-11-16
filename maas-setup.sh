@@ -1,6 +1,7 @@
 # lxd / maas issue. either upgrade lxd or maas to 3.1
 sudo snap switch --channel=4.19/stable lxd
 sudo snap refresh lxd
+sudo snap install jq
 sudo snap install --channel=3.1/beta maas
 sudo snap install --channel=3.1/beta maas-test-db
 
