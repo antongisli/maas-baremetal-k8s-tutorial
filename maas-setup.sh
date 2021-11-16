@@ -1,6 +1,7 @@
 # lxd / maas issue. either upgrade lxd or maas to 3.1
 sudo snap switch --channel=4.19/stable lxd
 sudo snap refresh lxd
+sudo snap install --channel=3.1/beta maas
 
 #get local interface name (this assumes a single default route is present)
 export INTERFACE=$(ip route | grep default | cut -d ' ' -f 5)
