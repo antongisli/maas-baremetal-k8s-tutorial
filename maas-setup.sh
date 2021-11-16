@@ -21,7 +21,7 @@ echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo deb
 echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
 sudo apt-get install iptables-persistent -y
 # LXD init
-sudo cat maas-baremetal-k8s-tutorial/lxd.cfg | lxd init --preseed
+sudo cat maas-baremetal-k8s-tutorial/lxd.conf | lxd init --preseed
 # Wait for LXD to be ready
 lxd waitready
 # Initialise MAAS
