@@ -5,7 +5,10 @@ sudo snap install jq
 sudo snap install --channel=3.1/beta maas
 sudo snap install --channel=3.1/beta maas-test-db
 
-#get local interface name (this assumes a single default route is present)
+# clone the git repository
+git clone https://github.com/antongisli/maas-baremetal-k8s-tutorial.git
+
+# get local interface name (this assumes a single default route is present)
 export INTERFACE=$(ip route | grep default | cut -d ' ' -f 5)
 export IP_ADDRESS=$(ip -4 addr show dev $INTERFACE | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
 sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
@@ -17,7 +20,7 @@ echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo deb
 echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
 sudo apt-get install iptables-persistent -y
 # LXD init
-sudo cat /tmp/lxd.cfg | lxd init --preseed
+sudo cat /maas-baremetal-k8s-tutorial/lxd.cfg | lxd init --preseed
 # Wait for LXD to be ready
 lxd waitready
 # Initialise MAAS
