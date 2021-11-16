@@ -2,6 +2,7 @@
 sudo snap switch --channel=4.19/stable lxd
 sudo snap refresh lxd
 sudo snap install --channel=3.1/beta maas
+sudo snap install --channel=3.1/beta maas-test-db
 
 #get local interface name (this assumes a single default route is present)
 export INTERFACE=$(ip route | grep default | cut -d ' ' -f 5)
@@ -42,16 +43,22 @@ VM_HOST_ID=maas admin vm-hosts create  password=password  type=lxd power_address
 ### creating VMs for Juju controller and our "bare metal"
 
 # add a VM for the juju controller with minimal memory
-maas admin vm-host compose $VM_HOST_ID cores=8 memory=2048 architecture="amd64/generic" storage="main:16(pool1)" hostname="juju-controller"
+maas admin vm-host compose $VM_HOST_ID cores=8 memory=2048 architecture="amd64/generic" \
+ storage="main:16(pool1)" hostname="juju-controller"
 # get the system-id and tag the machine with "juju-controller"
-JUJU_SYSID=$(maas admin machines read | jq  '.[] | select(."hostname"=="juju-controller") | .["system_id"]' | tr -d '"')
+JUJU_SYSID=$(maas admin machines read | jq  '.[] 
+| select(."hostname"=="juju-controller") 
+| .["system_id"]' | tr -d '"')
 maas admin tag update-nodes "juju-controller" add=$JUJU_SYSID
 
 ## Create 3 "bare metal" machines and tag them with "metal"
 for ID in 1 2 3
 do
-    maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" storage="main:25(pool1),ceph:150(pool1)" hostname="metal-${ID}"
-	SYSID=$(maas admin machines read | jq -r --arg MACHINE "metal-${ID}" '.[] | select(."hostname"==$MACHINE) | .["system_id"]' | tr -d '"')
+    maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" \
+     storage="main:25(pool1),ceph:150(pool1)" hostname="metal-${ID}"
+	SYSID=$(maas admin machines read | jq -r --arg MACHINE "metal-${ID}" '.[] 
+    | select(."hostname"==$MACHINE) 
+    | .["system_id"]' | tr -d '"')
     maas admin tag update-nodes "metal" add=$SYSID
 done
 
