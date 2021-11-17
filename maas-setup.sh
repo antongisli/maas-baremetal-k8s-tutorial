@@ -50,6 +50,10 @@ VM_HOST_ID=$(maas admin vm-hosts create  password=password  type=lxd power_addre
 # allow high CPU oversubscription so all VMs can use all cores
 maas admin vm-host update $VM_HOST_ID cpu_over_commit_ratio=4
 
+# create tags for MAAS
+maas admin tags create name=juju_controller comment='This tag should to machines that will be used as juju controllers'
+maas admin tags create name=metal comment='This tag should to machines that will be used as bare metal'
+
 ### creating VMs for Juju controller and our "bare metal"
 
 # add a VM for the juju controller with minimal memory
