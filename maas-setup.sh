@@ -128,7 +128,7 @@ juju deploy kubernetes-core --map-machines=existing,0=0,1=1
 
 # add the new kubernetes as a cloud to juju
 mkdir ~/.kube
-juju scp kubernetes-master/1:/home/ubuntu/config ~/.kube/config
+juju scp kubernetes-master/0:/home/ubuntu/config ~/.kube/config
 
 # add storage relations
 juju add-relation ceph-mon:admin kubernetes-master
