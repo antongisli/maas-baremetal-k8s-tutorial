@@ -1,9 +1,9 @@
 # lxd / maas issue. either upgrade lxd or maas to 3.1
-sudo snap switch --channel=4.19/stable lxd
+sudo snap switch --channel=latest/stable lxd
 sudo snap refresh lxd
 sudo snap install jq
-sudo snap install --channel=3.1/beta maas
-sudo snap install --channel=3.1/beta maas-test-db
+sudo snap install --channel=3.1/edge maas
+sudo snap install --channel=3.1/edge maas-test-db
 
 # clone the git repository
 cd ~
@@ -44,14 +44,14 @@ maas admin ipranges create type=dynamic start_ip=10.10.10.200 end_ip=10.10.10.25
 maas admin vlan update $FABRIC_ID $VLAN_TAG dhcp_on=True primary_rack=$PRIMARY_RACK
 maas admin maas set-config name=upstream_dns value=8.8.8.8
 # Add LXD as a VM host for MAAS and capture the VM_HOST_ID
-VM_HOST_ID=$(maas admin vm-hosts create  password=password  type=lxd power_address=https://${IP_ADDRESS}:8443 \
+export VM_HOST_ID=$(maas admin vm-hosts create  password=password  type=lxd power_address=https://${IP_ADDRESS}:8443 \
  project=maas | jq '.id')
 
 # allow high CPU oversubscription so all VMs can use all cores
 maas admin vm-host update $VM_HOST_ID cpu_over_commit_ratio=4
 
 # create tags for MAAS
-maas admin tags create name=juju_controller comment='This tag should to machines that will be used as juju controllers'
+maas admin tags create name=juju-controller comment='This tag should to machines that will be used as juju controllers'
 maas admin tags create name=metal comment='This tag should to machines that will be used as bare metal'
 
 ### creating VMs for Juju controller and our "bare metal"
@@ -60,7 +60,7 @@ maas admin tags create name=metal comment='This tag should to machines that will
 maas admin vm-host compose $VM_HOST_ID cores=8 memory=2048 architecture="amd64/generic" \
  storage="main:16(pool1)" hostname="juju-controller"
 # get the system-id and tag the machine with "juju-controller"
-JUJU_SYSID=$(maas admin machines read | jq  '.[] 
+export JUJU_SYSID=$(maas admin machines read | jq  '.[] 
 | select(."hostname"=="juju-controller") 
 | .["system_id"]' | tr -d '"')
 maas admin tag update-nodes "juju-controller" add=$JUJU_SYSID
@@ -80,8 +80,8 @@ done
 ### Juju setup (note, this section requires manual intervention)
 cd ~
 sudo snap install juju --classic
-sed -i 's/IP_ADDRESS/${IP_ADDRESS}/' maas-cloud.yaml
-juju add-cloud --local maas-cloud maas-cloud.yaml
+sed -i "s/IP_ADDRESS/$IP_ADDRESS/" maas-baremetal-k8s-tutorial/maas-cloud.yaml
+juju add-cloud --local maas-cloud maas-baremetal-k8s-tutorial/maas-cloud.yaml
 juju add-credential maas-cloud
 juju clouds --local
 juju credentials
