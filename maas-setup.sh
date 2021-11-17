@@ -69,7 +69,7 @@ maas admin tag update-nodes "juju-controller" add=$JUJU_SYSID
 for ID in 1 2 3
 do
     maas admin vm-host compose $VM_HOST_ID cores=8 memory=8192 architecture="amd64/generic" \
-     storage="main:25(pool1),ceph:150(pool1)" hostname="metal-${ID}"
+     storage="main:25(pool1),ceph:100(pool1)" hostname="metal-${ID}"
 	SYSID=$(maas admin machines read | jq -r --arg MACHINE "metal-${ID}" '.[] 
     | select(."hostname"==$MACHINE) 
     | .["system_id"]' | tr -d '"')
@@ -138,8 +138,7 @@ juju add-relation ceph-mon:client kubernetes-master
 juju add-k8s my-k8s
 
 juju bootstrap my-k8s
-
-
+juju controllers
 
 ### Deploying applications
 # juju add-model some-model my-k8s
