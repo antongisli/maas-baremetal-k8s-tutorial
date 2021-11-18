@@ -150,11 +150,41 @@ juju controllers
 
 ### Notes / LMA stack deployment
 ## add an LMA model to the cluster
-juju add-model lma my-k8s
+# juju add-model lma my-k8s
 
-juju deploy lma-light --channel=edge --trust
+# juju deploy lma-light --channel=edge --trust
 
 ## random notes
 # get some storage going
 # https://jaas.ai/ceph-base
 # https://jaas.ai/canonical-kubernetes/bundle/471
+# https://medium.com/swlh/kubernetes-external-ip-service-type-5e5e9ad62fcd
+# https://charmhub.io/nginx-ingress-integrator
+# https://drive.google.com/file/d/1estQna40vz4uS5tBd9CvKdILdwAmcNFH/view - hello-kubecon
+# https://ubuntu.com/kubernetes/docs/troubleshooting - troubleshooting
+### https://juju.is/blog/deploying-mattermost-and-kubeflow-on-kubernetes-with-juju-2-9
+
+juju add-model hello-kubecon
+# Deploy the ingress integrator
+juju deploy nginx-ingress-integrator ingress
+# trust
+juju trust ingress --scope=cluster
+
+# Deploy the charm
+juju deploy hello-kubecon --config juju-external-hostname=kubecon.test
+
+sudo iptables -t nat -A PREROUTING -p tcp -i enp6s0 --dport 8000 -j DNAT --to-destination 10.10.10.5:80
+
+#juju config ingress service-name=hello-kubecon service-port=80 service-hostname=foo.internal
+#juju config ingress service-name=hello-kubecon service-port=80 service-hostname=hello-kubecon.test
+
+
+
+# Relate our app to the ingress
+juju relate hello-kubecon ingress
+
+https://juju.is/blog/deploying-mattermost-and-kubeflow-on-kubernetes-with-juju-2-9
+kubectl port-forward deployment/mattermost -n mattermost 8080:8065
+
+kubectl patch svc mattermost -n mattermost -p '{"spec":{"externalIPs":["10.10.10.3"]}}'
+kubectl get svc -n mattermost
