@@ -140,6 +140,44 @@ juju add-k8s my-k8s
 juju bootstrap my-k8s
 juju controllers
 
+### Deploy a test application on K8s cluster
+
+# Create a model in juju, which creates a namespace in K8s
+juju add-model hello-kubecon
+
+# Deploy the charm "hello-kubecon", and set a hostname for the ingress
+juju deploy hello-kubecon --config juju-external-hostname=kubecon.test
+
+# Deploy the ingress integrator - this is a helper to setup the ingress
+juju deploy nginx-ingress-integrator ingress
+
+# trust the ingress
+juju trust ingress --scope=cluster
+
+# Relate our app to the ingress - this causes the ingress to be setup
+juju relate hello-kubecon ingress
+
+# Explore the setup 
+kubectl describe ingress -n hello-kubecon
+kubectl get svc -n hello-kubecon
+kubectl describe svc hello-kubecon-service -n hello-kubecon
+kubectl get pods -n hello-kubecon
+
+# Lastly, in order to be able to reach the service from outside our host machine,
+# we can use port forwarding. Replace 10.10.10.5 with the IP seen on the ingress.
+sudo iptables -t nat -A PREROUTING -p tcp -i enp6s0 \
+ --dport 8000 -j DNAT --to-destination 10.10.10.5:80
+
+#if you want to persist this, run sudo dpkg-reconfigure iptables-persistent
+
+# Now you should be able to open a browser and navigate to http://your-machines-real-ip:8000
+
+# To clean up everything:
+juju destroy-controller -y --destroy-all-models --destroy-storage maas-cloud-default
+# And the machines created in MAAS can be deleted easily in the MAAS GUI.
+
+### END
+
 ### Deploying applications
 # juju add-model some-model my-k8s
 # juju deploy someapp(s)
@@ -164,27 +202,5 @@ juju controllers
 # https://ubuntu.com/kubernetes/docs/troubleshooting - troubleshooting
 ### https://juju.is/blog/deploying-mattermost-and-kubeflow-on-kubernetes-with-juju-2-9
 
-juju add-model hello-kubecon
-# Deploy the ingress integrator
-juju deploy nginx-ingress-integrator ingress
-# trust
-juju trust ingress --scope=cluster
 
-# Deploy the charm
-juju deploy hello-kubecon --config juju-external-hostname=kubecon.test
-
-sudo iptables -t nat -A PREROUTING -p tcp -i enp6s0 --dport 8000 -j DNAT --to-destination 10.10.10.5:80
-
-#juju config ingress service-name=hello-kubecon service-port=80 service-hostname=foo.internal
-#juju config ingress service-name=hello-kubecon service-port=80 service-hostname=hello-kubecon.test
-
-
-
-# Relate our app to the ingress
-juju relate hello-kubecon ingress
-
-https://juju.is/blog/deploying-mattermost-and-kubeflow-on-kubernetes-with-juju-2-9
-kubectl port-forward deployment/mattermost -n mattermost 8080:8065
-
-kubectl patch svc mattermost -n mattermost -p '{"spec":{"externalIPs":["10.10.10.3"]}}'
-kubectl get svc -n mattermost
+#https://juju.is/blog/deploying-mattermost-and-kubeflow-on-kubernetes-with-juju-2-9
