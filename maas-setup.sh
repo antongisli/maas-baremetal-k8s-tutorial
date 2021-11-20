@@ -171,6 +171,7 @@ sudo iptables -t nat -A PREROUTING -p tcp -i enp6s0 \
 # if you want to persist this, run sudo dpkg-reconfigure iptables-persistent
 
 # scale our kubernetes cluster - find a machine (avoid kubernetes-master)
+# https://discourse.charmhub.io/t/scaling-applications/1075
 juju switch maas-cloud-default
 juju status
 
@@ -178,6 +179,7 @@ juju status
 juju add-unit kubernetes-worker --to 2
 
 # add another kubecon unit
+
 juju add-unit -n 1 hello-kubecon
 juju status
 
@@ -186,6 +188,13 @@ kubectl get ingress -n hello-kubecon
 
 # exercise for the reader - iptables round robin :)
 
+# scale down hello-kubecon
+juju remove-unit --num-units 1  hello-kubecon
+
+# scaledown kubernetes
+juju switch maas-cloud-default 
+juju remove-unit  kubernetes-worker/1
+juju status
 
 # if you want to test destroying your hello-kubecon:
 juju destroy-model hello-kubecon --release-storage
