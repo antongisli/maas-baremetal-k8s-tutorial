@@ -168,7 +168,30 @@ kubectl get pods -n hello-kubecon
 sudo iptables -t nat -A PREROUTING -p tcp -i enp6s0 \
  --dport 8000 -j DNAT --to-destination 10.10.10.5:80
 
-#if you want to persist this, run sudo dpkg-reconfigure iptables-persistent
+# if you want to persist this, run sudo dpkg-reconfigure iptables-persistent
+
+# scale our kubernetes cluster - find a machine (avoid kubernetes-master)
+juju switch maas-cloud-default
+juju status
+
+# add a kubernetes-worker
+juju add-unit kubernetes-worker --to 2
+
+# add another kubecon unit
+juju add-unit -n 1 hello-kubecon
+juju status
+
+# what happened to the ingress?
+kubectl get ingress -n hello-kubecon
+
+# exercise for the reader - iptables round robin :)
+
+
+# if you want to test destroying your hello-kubecon:
+juju destroy-model hello-kubecon --release-storage
+
+# if you want to destroy your kubenetes controller for juju
+juju destroy-controller my-k8s
 
 # Now you should be able to open a browser and navigate to http://your-machines-real-ip:8000
 
