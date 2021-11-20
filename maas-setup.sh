@@ -179,7 +179,7 @@ juju status
 juju add-unit kubernetes-worker --to 2
 
 # add another kubecon unit
-
+juju switch my-k8s
 juju add-unit -n 1 hello-kubecon
 juju status
 
