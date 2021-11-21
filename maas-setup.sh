@@ -151,7 +151,7 @@ juju deploy hello-kubecon --config juju-external-hostname=kubecon.test
 # Deploy the ingress integrator - this is a helper to setup the ingress
 juju deploy nginx-ingress-integrator ingress
 
-# trust the ingress
+# trust the ingress (it needs cluster credentials to make changes)
 juju trust ingress --scope=cluster
 
 # Relate our app to the ingress - this causes the ingress to be setup
@@ -167,10 +167,12 @@ kubectl get pods -n hello-kubecon
 # we can use port forwarding. Replace 10.10.10.5 with the IP seen on the ingress.
 sudo iptables -t nat -A PREROUTING -p tcp -i enp6s0 \
  --dport 8000 -j DNAT --to-destination 10.10.10.5:80
-
 # if you want to persist this, run sudo dpkg-reconfigure iptables-persistent
+# Now you should be able to open a browser and navigate to http://$IP_ADDRESS:8000
 
-# scale our kubernetes cluster - find a machine (avoid kubernetes-master)
+
+# scale our kubernetes cluster - find a machine 
+# Avoid kubernetes-master or existing kubernetes-worker machines
 # https://discourse.charmhub.io/t/scaling-applications/1075
 juju switch maas-cloud-default
 juju status
@@ -186,53 +188,47 @@ juju status
 # what happened to the ingress?
 kubectl get ingress -n hello-kubecon
 
-# exercise for the reader - iptables round robin :)
+# exercise for the reader - iptables round robin or MetalLB:)
 
 # scale down hello-kubecon
 juju remove-unit --num-units 1  hello-kubecon
 
 # scaledown kubernetes
 juju switch maas-cloud-default 
-juju remove-unit  kubernetes-worker/1
+juju remove-unit kubernetes-worker/1
 juju status
 
 # if you want to test destroying your hello-kubecon:
+juju switch my-k8s
 juju destroy-model hello-kubecon --release-storage
 
 # if you want to destroy your kubenetes controller for juju
+juju switch maas-cloud-default
 juju destroy-controller my-k8s
 
-# Now you should be able to open a browser and navigate to http://your-machines-real-ip:8000
+# if you want to remove your k8s cluster:
+juju switch maas-cloud-default
+juju remove-application kubernetes-master kubernetes-worker etcd flannel easyrsa
+
+# if you want to remove ceph
+juju switch maas-cloud-default
+juju remove-application ceph-mon ceph-osd
 
 # To clean up everything:
 juju destroy-controller -y --destroy-all-models --destroy-storage maas-cloud-default
 # And the machines created in MAAS can be deleted easily in the MAAS GUI.
 
-### END
-
-### Deploying applications
-# juju add-model some-model my-k8s
-# juju deploy someapp(s)
-
-### Cleanup? not sure this always works.
-
-#juju destroy-controller -y --destroy-all-models --destroy-storage maas-cloud-default
-
-### Notes / LMA stack deployment
-## add an LMA model to the cluster
-# juju add-model lma my-k8s
-
-# juju deploy lma-light --channel=edge --trust
-
-## random notes
-# get some storage going
+### Reference materials notes
 # https://jaas.ai/ceph-base
 # https://jaas.ai/canonical-kubernetes/bundle/471
 # https://medium.com/swlh/kubernetes-external-ip-service-type-5e5e9ad62fcd
 # https://charmhub.io/nginx-ingress-integrator
 # https://drive.google.com/file/d/1estQna40vz4uS5tBd9CvKdILdwAmcNFH/view - hello-kubecon
 # https://ubuntu.com/kubernetes/docs/troubleshooting - troubleshooting
-### https://juju.is/blog/deploying-mattermost-and-kubeflow-on-kubernetes-with-juju-2-9
+# https://juju.is/blog/deploying-mattermost-and-kubeflow-on-kubernetes-with-juju-2-9
+
+### END
 
 
-#https://juju.is/blog/deploying-mattermost-and-kubeflow-on-kubernetes-with-juju-2-9
+
+
