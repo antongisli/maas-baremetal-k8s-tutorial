@@ -1,3 +1,6 @@
+# Copyright 2012-2016 Canonical Ltd.  This software is licensed under the
+# GNU Affero General Public License version 3 (see the file LICENSE).
+
 # lxd / maas issue. either upgrade lxd or maas to 3.1
 sudo snap switch --channel=latest/stable lxd
 sudo snap refresh lxd
