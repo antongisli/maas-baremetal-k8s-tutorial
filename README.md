@@ -2,7 +2,7 @@
 
 ## Intro
 
-This is a series of commands and configuration files that will guide you to build your own emulated bare metal k8s cluster on a single machine.
+This is a series of commands and configuration files that will guide you to build your own emulated bare metal k8s cluster on a single machine, using https://maas.io
 
 It is designed to be used in conjunction with an explanatory video tutorial: https://www.youtube.com/watch?v=sLADei_c9Qg
 
