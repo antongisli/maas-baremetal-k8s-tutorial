@@ -3,7 +3,7 @@
 
 # README FIRST
 # You need a reasonably powerful bare metal machine, 4 or more cores with 32 GB of RAM and 500GB of free disk space. Assumes a fresh install of Ubuntu server (20.04 or higher) on the machine.
-# The reason you need a bare metal machine is because nesting multiple layers of VMs will not work and/or have performance problems.
+# You need a bare metal machine is because nesting multiple layers of VMs will not work and/or have performance problems.
 # Note: this tutorial has not been tested on versions prior to 20.04.
 
 # lxd / maas issue. either upgrade lxd or maas to 3.1
