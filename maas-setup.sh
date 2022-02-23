@@ -100,7 +100,7 @@ juju bootstrap maas-cloud --bootstrap-constraints "tags=juju-controller mem=2G"
 # fire up the juju gui to view the fun
 # if it's a remote machine, you can use an SSH tunnel to get access to it:
 # e.g. ssh ubuntu@x.x.x.x -L8080:10.10.10.2:17070
-juju gui
+juju dashboard
 # get coffee
 
 # check jujus view of machines
