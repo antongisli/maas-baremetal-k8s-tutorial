@@ -155,7 +155,7 @@ juju controllers
 juju add-model hello-kubecon
 
 # Deploy the charm "hello-kubecon", and set a hostname for the ingress
-juju deploy hello-kubecon --config juju-external-hostname=kubecon.test
+juju deploy hello-kubecon
 
 # Deploy the ingress integrator - this is a helper to setup the ingress
 juju deploy nginx-ingress-integrator ingress
