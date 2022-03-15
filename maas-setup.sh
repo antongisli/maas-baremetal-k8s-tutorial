@@ -174,7 +174,7 @@ kubectl get pods -n hello-kubecon
 
 # Lastly, in order to be able to reach the service from outside our host machine,
 # we can use port forwarding. Replace 10.10.10.5 with the IP seen on the ingress.
-sudo iptables -t nat -A PREROUTING -p tcp -i enp6s0 \
+sudo iptables -t nat -A PREROUTING -p tcp -i $INTERFACE \
  --dport 8000 -j DNAT --to-destination 10.10.10.5:80
 # if you want to persist this, run sudo dpkg-reconfigure iptables-persistent
 # Now you should be able to open a browser and navigate to http://$IP_ADDRESS:8000
