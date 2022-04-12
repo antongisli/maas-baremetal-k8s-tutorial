@@ -7,12 +7,11 @@
 # Note: this tutorial has not been tested on versions prior to 20.04.
 
 # lxd / maas issue. either upgrade lxd or maas to 3.1
-sudo snap switch --channel=latest/stable lxd
-sudo snap install lxd
-sudo snap refresh lxd
+sudo snap install --channel=latest/stable lxd
+sudo snap refresh --channel=latest/stable lxd
 sudo snap install jq
-sudo snap install --channel=3.1/edge maas
-sudo snap install --channel=3.1/edge maas-test-db
+sudo snap install maas
+sudo snap install maas-test-db
 
 # clone the git repository
 cd ~
