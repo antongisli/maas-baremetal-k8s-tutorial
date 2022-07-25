@@ -36,13 +36,15 @@ lxc network show lxdbr0
 lxd waitready
 # Initialise MAAS
 sudo maas init region+rack --database-uri maas-test-db:/// --maas-url http://${IP_ADDRESS}:5240/MAAS
-sleep 15
+# Sleeping for awhile to let MAAS do what it needs to do.
+sleep 30
 # Create MAAS admin and grab API key
 sudo maas createadmin --username admin --password admin --email admin
 export APIKEY=$(sudo maas apikey --username admin)
 # MAAS admin login
 maas login admin 'http://localhost:5240/MAAS/' $APIKEY
-# Configure MAAS networking (set gateways, vlans, DHCP on etc)
+# Configure MAAS networking (set gateways, vlans, DHCP on etc). If you encounter errors
+# here, it might be because MAAS hasn't finished initialising. You can try waiting a bit and rerunning.
 export SUBNET=10.10.10.0/24
 export FABRIC_ID=$(maas admin subnet read "$SUBNET" | jq -r ".vlan.fabric_id")
 export VLAN_TAG=$(maas admin subnet read "$SUBNET" | jq -r ".vlan.vid")
