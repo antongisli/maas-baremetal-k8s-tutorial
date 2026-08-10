@@ -1,3 +1,5 @@
+
+
 # Bare metal Kubernetes with MAAS, LXD, and Juju
 
 ## Intro
@@ -8,7 +10,7 @@ It is designed to be used in conjunction with an explanatory video tutorial: htt
 
 ## How to use
 
-Read maas-setup.sh. The script is not fully automated and requires manual intervention at times. Read the comments to understand the process.
+Read maas-setup.sh. The script is not fully automated and requires manual intervention at times. Read the comments to understand the process. Note: The script automatically installs required dependencies via Snap and populates `maas-cloud.yaml` with your host's IP address.
 
 ## Requirements
 
